@@ -8,23 +8,29 @@ echo "This script must be run from the same directory as the ISO or you need to 
 exit
 else
 
-sudo mkdir /mnt/iso
-sudo mkdir /tmp/BootableISO
+
+sudo mkdir -p ~/mnt/iso
+sudo mkdir -p ~/tmp/BootableISO/iso
 echo "Mounting non-bootable ISO..."
-sudo mount -o loop "$isoname" /mnt/iso
+# sudo mount -o loop "$isoname" ~/mnt/iso
+sudo hdiutil attach "$isoname" -mountroot ~/mnt/iso
 
 echo "Copying data from ISO to tmp directory..."
-rsync -a /mnt/iso /tmp/BootableISO
+sudo rsync -a ~/mnt/iso ~/tmp/BootableISO
 
-if [ -d /tmp/BootableISO/iso ]; then
-cd /tmp/BootableISO/iso
+if [ -d ~/tmp/BootableISO/iso ]; then
+	cd ~/tmp/BootableISO/iso/CDROM
 else
-cd /tmp/BootableISO
+	cd ~/tmp/BootableISO
 fi
 
 echo "Creating new bootable ISO using data from tmp directory..."
-mkisofs -o /tmp/Bootable_"$isoname" -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -J -R .
-sudo umount -l /mnt/iso
-rm -rf /tmp/BootableISO
+sudo mkisofs -o ~/tmp/Bootable_"$isoname" -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -J -R .
+
+echo "Unmouting and removing data. File will be in /tmp/BootableISO folder."
+sudo hdiutil unmount ~/mnt/iso/CDROM
+cd ~/tmp/
+sudo rm -rf ~/tmp/BootableISO
+sudo rm -rf ~/mnt
 
 fi
